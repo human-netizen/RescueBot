@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "219864425350",
+    "project_id": "bletest-4da92",
+    "storage_bucket": "bletest-4da92.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:219864425350:android:028c57b432bee5941fc207",
+        "android_client_info": {
+          "package_name": "com.example.bletest"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDpNagOdQKkPJEvJnPXfG4RCwdV3a-UN_8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

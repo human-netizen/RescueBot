@@ -18,17 +18,25 @@ import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 
 import java.io.OutputStream;
 import java.text.DecimalFormat;
 import java.util.Locale;
+import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 
 import de.hdodenhof.circleimageview.CircleImageView;
 import android.os.Bundle;
+
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -36,6 +44,12 @@ public class MainActivity extends AppCompatActivity {
     BluetoothDevice bluetoothDevice;
     BluetoothSocket bluetoothSocket;
     OutputStream outputStream;
+    // Write a message to the database
+    FirebaseDatabase database;
+    DatabaseReference myRef;
+    TextView textView;
+
+
 
     private String macAddress = "";
     UUID uuid = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB");
@@ -53,6 +67,8 @@ public class MainActivity extends AppCompatActivity {
     @SuppressLint("ClickableViewAccessibility")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        database = FirebaseDatabase.getInstance();
+        myRef = database.getReference("move");
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
@@ -72,6 +88,7 @@ public class MainActivity extends AppCompatActivity {
         textViewx = findViewById(R.id.textViewx);
         textViewy = findViewById(R.id.textViewy);
         textViewAngel = findViewById(R.id.textViewAngel);
+        textView = findViewById(R.id.textView);
 
 
         System.out.println(xDown);
@@ -121,7 +138,7 @@ public class MainActivity extends AppCompatActivity {
                             angleDegrees += 360;
                         }
                         String str = new DecimalFormat("#.0#").format(angleDegrees);
-                        textViewAngel.setText("angel: " + str);
+                        textViewAngel.setText("angle: " + str);
                         String[] motorValues = calculateMotorValuesAsString((float) angleDegrees);
                         String motorString1 = "l" + motorValues[0];
                         if(motorValues[0].charAt(0) == '-'){
@@ -195,7 +212,64 @@ public class MainActivity extends AppCompatActivity {
         bluetoothDevice = bluetoothAdapter.getRemoteDevice(macAddress);
         Toast.makeText(this, "ekhane elo", Toast.LENGTH_LONG).show();
 
+        // Read from the database
+        myRef.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                // This method is called once with the initial value and again
+                // whenever data at this location is updated.
+                String value = dataSnapshot.getValue(String.class);
+                //Log.d(TAG, "Value is: " + value);
+                Toast.makeText(MainActivity.this, value, Toast.LENGTH_SHORT).show();
+                String motorString1;// = "l" + motorValues[0];
+                String motorString2;// = "r" + motorValues[1];
+                if(Objects.equals(value, "f")){
+                    System.out.println("hi");
+                    //motorString1 = "l255";
+                    //motorString2 = "r255";
+                    sendCommand("ff");
+                    textView.setText("forward");
+                }
+                else if(Objects.equals(value, "s")){
+                    //motorString1 = "l0";
+                    //motorString2 = "r0";
+                    sendCommand("ss");
+                    textView.setText("Stop");
+                }
+                else if(Objects.equals(value, "b")){
+                    //motorString1 = "a255";
+                    //motorString2 = "b255";
+                    sendCommand("bb");
+                    textView.setText("back");
+                }
+                else if(Objects.equals(value, "l")){
+                    //motorString1 = "l0";
+                    //motorString2 = "r255";
+                    sendCommand("rl");
+                    textView.setText("left");
+                }
+                else if(Objects.equals(value, "r")){
+                    motorString1 = "l255";
+                    motorString2 = "r0";
+                    sendCommand("rr");
+                    textView.setText("right");
+                }
 
+                //int motor1 = Integer.parseInt(motorValues[0]);
+                //int motor2 = Integer.parseInt(motorValues[1]);
+                //textViewx.setText("Motor 1: " + motorValues[0]);
+                //textViewy.setText("Motor 2: " + motorValues[1]);
+                //sendCommands(motorValues);
+                //sendCommand(motorString1);
+                //sendCommand(motorString2);
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+                // Failed to read value
+                //Log.w(TAG, "Failed to read value.", error.toException());
+            }
+        });
 
 
         new Thread(new Runnable() {
